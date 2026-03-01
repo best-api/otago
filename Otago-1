@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Otago Campus Quest</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <style>
+        body, html { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+        #renderCanvas { width: 100%; height: 100%; touch-action: none; }
+        #ui { position: absolute; top: 20px; left: 20px; color: white; font-family: 'Courier New', Courier, monospace; background: rgba(0,0,0,0.5); padding: 10px; border: 2px solid #00508F; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <b>Otago Quest: Live</b><br>
+        Mission: Find the Clocktower<br>
+        XP: <span id="xp">0</span> | Moves: WASD
+    </div>
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("renderCanvas");
+        const engine = new BABYLON.Engine(canvas, true);
+        let xp = 0;
+
+        const createScene = () => {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color3(0.5, 0.8, 1); // Otago Blue Sky
+
+            const camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 5, -10), scene);
+            camera.setTarget(BABYLON.Vector3.Zero());
+            camera.attachControl(canvas, true);
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Ground (The University Quad)
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
+            const groundMat = new BABYLON.StandardMaterial("gMat", scene);
+            groundMat.diffuseColor = new BABYLON.Color3(0.2, 0.5, 0.2);
+            ground.material = groundMat;
+
+            // Minecraft-style Character (Simple Cube for now)
+            const player = BABYLON.MeshBuilder.CreateBox("player", {size: 1}, scene);
+            player.position.y = 0.5;
+            const playerMat = new BABYLON.StandardMaterial("pMat", scene);
+            playerMat.diffuseColor = BABYLON.Color3.Yellow(); // Otago Gold
+            player.material = playerMat;
+
+            // The "Clocktower" Placeholder
+            const tower = BABYLON.MeshBuilder.CreateBox("tower", {height: 10, width: 2, depth: 2}, scene);
+            tower.position = new BABYLON.Vector3(10, 5, 10);
+            
+            // Mission Logic
+            scene.onBeforeRenderObservable.add(() => {
+                if (player.intersectsMesh(tower, false)) {
+                    if (xp === 0) {
+                        xp = 100;
+                        document.getElementById("xp").innerText = xp;
+                        alert("Mission Complete: You found the Clocktower!");
+                    }
+                }
+            });
+
+            // Keyboard Movement
+            window.addEventListener("keydown", (e) => {
+                if (e.key == "w") player.position.z += 0.5;
+                if (e.key == "s") player.position.z -= 0.5;
+                if (e.key == "a") player.position.x -= 0.5;
+                if (e.key == "d") player.position.x += 0.5;
+                camera.position.x = player.position.x;
+                camera.position.z = player.position.z - 10;
+            });
+
+            return scene;
+        };
+
+        const scene = createScene();
+        engine.runRenderLoop(() => scene.render());
+        window.addEventListener("resize", () => engine.resize());
+    </script>
+</body>
+</html>
